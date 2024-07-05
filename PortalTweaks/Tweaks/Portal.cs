@@ -13,6 +13,8 @@ namespace PortalTweaks.Tweaks;
 public static class Portal
 {
     private static readonly Dictionary<string, ConfigEntry<string>> keyConfigs = new();
+    private static PortalCharge? m_currentPortal;
+    
     [HarmonyPatch(typeof(ZNetScene), nameof(ZNetScene.Awake))]
     private static class Register_Tweaks
     {
@@ -159,7 +161,8 @@ public static class Portal
             stringBuilder.Append("\n");
             stringBuilder.Append($"{component.GetChargeItem()?.m_itemData.m_shared.m_name}: ");
             stringBuilder.Append($"{component.GetCurrentCharge()} / {PortalTweaksPlugin._chargeMax.Value}\n");
-            stringBuilder.Append($"[<color=yellow><b>L.Shift</b></color> + <color=yellow><b>$KEY_Use</b></color>] {PortalTweaksPlugin._addCharge.Value}");
+            if (!PortalTweaksPlugin.m_isTargetPortalInstalled) 
+                stringBuilder.Append($"[<color=yellow><b>L.Shift</b></color> + <color=yellow><b>$KEY_Use</b></color>] {PortalTweaksPlugin._addCharge.Value}");
             __result = Localization.instance.Localize(stringBuilder.ToString());
         }
     }
@@ -167,8 +170,9 @@ public static class Portal
     [HarmonyPatch(typeof(TeleportWorld), nameof(TeleportWorld.Interact))]
     private static class TeleportWorld_Interact_Patch
     {
-        private static bool Prefix(TeleportWorld __instance, Humanoid human, bool hold, bool alt)
+        private static bool Prefix(TeleportWorld __instance, Humanoid human, bool alt)
         {
+            if (PortalTweaksPlugin.m_isTargetPortalInstalled) return true;
             if (!__instance.m_nview.IsValid()) return true;
             if (!alt) return true;
             if (!PrivateArea.CheckAccess(__instance.transform.position)) return true;
@@ -206,6 +210,21 @@ public static class Portal
             if (!__instance.TryGetComponent(out PortalCharge component)) return;
             component.RemoveCharge(PortalTweaksPlugin._cost.Value);
             TeleportTames(__instance, player);
+        }
+    }
+
+    [HarmonyPatch(typeof(Player), nameof(Player.TeleportTo))]
+    private static class Player_TeleportTo_Patch
+    {
+        private static void Postfix(Player __instance, Vector3 pos, Quaternion rot)
+        {
+            if (!PortalTweaksPlugin.m_isTargetPortalInstalled) return;
+            if (!__instance) return;
+            if (m_currentPortal == null) return;
+            m_currentPortal.RemoveCharge(PortalTweaksPlugin._cost.Value);
+            m_currentPortal = null;
+            if (PortalTweaksPlugin._TeleportTames.Value is PortalTweaksPlugin.Toggle.Off) return;
+            TeleportCharacters(GetTames(__instance), pos, rot);
         }
     }
 
@@ -268,6 +287,35 @@ public static class Portal
     private static void TeleportTames(TeleportWorld __instance, Player player)
     {
         if (PortalTweaksPlugin._TeleportTames.Value is PortalTweaksPlugin.Toggle.Off) return;
+        if (!__instance.TargetFound()) return;
+        if (ZoneSystem.instance.GetGlobalKey(GlobalKeys.NoPortals)) return;
+        ZDO zdo = ZDOMan.instance.GetZDO(__instance.m_nview.GetZDO().GetConnectionZDOID(ZDOExtraData.ConnectionType.Portal));
+        if (zdo == null) return;
+        GetLocation(__instance, zdo, out Vector3 position, out Quaternion rotation);
+        TeleportCharacters(GetTames(player), position, rotation);
+    }
+
+    private static void TeleportCharacters(List<Character> characters, Vector3 position, Quaternion rotation)
+    {
+        foreach (Character? character in characters)
+        {
+            Vector3 random = Random.insideUnitSphere * 10f;
+            Vector3 location = position + new Vector3(random.x, 0f, random.z);
+            TeleportTo(character, location, rotation);
+        }
+    }
+
+    private static void GetLocation(TeleportWorld __instance, ZDO zdo, out Vector3 position, out Quaternion rotation)
+    {
+        position = zdo.GetPosition();
+        rotation = zdo.GetRotation();
+        Vector3 vector3 = rotation * Vector3.forward;
+        Vector3 pos = position + vector3 * __instance.m_exitDistance + Vector3.up;
+        position = pos;
+    }
+
+    private static List<Character> GetTames(Player player)
+    {
         List<Character> m_characters = new();
         foreach (Character? character in Character.GetAllCharacters())
         {
@@ -280,20 +328,7 @@ public static class Portal
             m_characters.Add(character);
         }
 
-        if (!__instance.TargetFound()) return;
-        if (ZoneSystem.instance.GetGlobalKey(GlobalKeys.NoPortals)) return;
-        ZDO zdo = ZDOMan.instance.GetZDO(__instance.m_nview.GetZDO().GetConnectionZDOID(ZDOExtraData.ConnectionType.Portal));
-        if (zdo == null) return;
-        Vector3 position = zdo.GetPosition();
-        Quaternion rotation = zdo.GetRotation();
-        Vector3 vector3 = rotation * Vector3.forward;
-        Vector3 pos = position + vector3 * __instance.m_exitDistance + Vector3.up;
-        foreach (Character? character in m_characters)
-        {
-            Vector3 random = Random.insideUnitSphere * 10f;
-            Vector3 location = pos + new Vector3(random.x, 0f, random.z);
-            TeleportTo(character, location, rotation);
-        }
+        return m_characters;
     }
 
     private static void TeleportTo(Character character, Vector3 pos, Quaternion rot)
@@ -304,5 +339,23 @@ public static class Portal
         transform.position = pos;
         transform.rotation = rot;
         character.m_body.velocity = Vector3.zero;
+    }
+
+    [HarmonyPatch(typeof(TeleportWorldTrigger), nameof(TeleportWorldTrigger.OnTriggerEnter))]
+    private static class TeleportWorldTrigger_OnTriggerEnter_Patch
+    {
+        private static void Postfix(TeleportWorldTrigger __instance)
+        {
+            if (!PortalTweaksPlugin.m_isTargetPortalInstalled) return;
+            if (!Minimap.instance || !Game.instance || !Player.m_localPlayer) return;
+            if (!__instance.m_teleportWorld.TryGetComponent(out PortalCharge component)) return;
+            if (component.CanTeleport())
+            {
+                m_currentPortal = component;
+                return;
+            }
+            Minimap.instance.SetMapMode(Game.m_noMap ? Minimap.MapMode.None : Minimap.MapMode.Small);
+            Player.m_localPlayer.Message(MessageHud.MessageType.Center, RequiredItemMessage(component));
+        }
     }
 }

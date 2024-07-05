@@ -24,7 +24,7 @@ public class PortalCharge : MonoBehaviour
             m_znv.GetZDO().Set(m_timerKey, (long)ZNet.instance.GetTimeSeconds());
         }
 
-        if (GetCurrentCharge() > 0)
+        if (GetCurrentCharge() > 0 && PortalTweaksPlugin._Decays.Value is PortalTweaksPlugin.Toggle.On)
         {
             InvokeRepeating(nameof(UpdateCharge), m_updateTime, m_updateTime);
         }
@@ -36,7 +36,7 @@ public class PortalCharge : MonoBehaviour
         if (!m_znv.IsValid()) return;
         int floor = GetDecayAmount();
         if (floor == 0) return;
-        if (!RemoveCharge(floor))
+        if (!RemoveCharge(floor) || PortalTweaksPlugin._Decays.Value is PortalTweaksPlugin.Toggle.Off)
         {
             m_znv.CancelInvoke(nameof(UpdateCharge));
         }
@@ -78,13 +78,15 @@ public class PortalCharge : MonoBehaviour
         int currentCharge = GetCurrentCharge();
         if (currentCharge >= PortalTweaksPlugin._chargeMax.Value) return;
         m_znv.GetZDO().Set(m_key, Mathf.Clamp(currentCharge + amount, 0, PortalTweaksPlugin._chargeMax.Value));
-        CancelInvoke(nameof(UpdateCharge));
-        InvokeRepeating(nameof(UpdateCharge), m_updateTime, m_updateTime);
         ResetTimer();
+        CancelInvoke(nameof(UpdateCharge));
+        if (PortalTweaksPlugin._Decays.Value is PortalTweaksPlugin.Toggle.Off) return;
+        InvokeRepeating(nameof(UpdateCharge), m_updateTime, m_updateTime);
     }
 
     public bool RemoveCharge(int amount)
     {
+        if (amount == 0) return false;
         if (m_znv == null) return false;
         if (!m_znv.IsValid()) return false;
         int currentCharge = GetCurrentCharge();

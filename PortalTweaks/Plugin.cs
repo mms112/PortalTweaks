@@ -2,16 +2,17 @@
 using System.IO;
 using System.Reflection;
 using BepInEx;
+using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using JetBrains.Annotations;
-using PortalTweaks.Behaviors;
 using ServerSync;
 
 namespace PortalTweaks
 {
     [BepInPlugin(ModGUID, ModName, ModVersion)]
+    [BepInDependency("org.bepinex.plugins.targetportal", BepInDependency.DependencyFlags.SoftDependency)]
     public class PortalTweaksPlugin : BaseUnityPlugin
     {
         internal const string ModName = "PortalTweaks";
@@ -27,10 +28,13 @@ namespace PortalTweaks
         public static PortalTweaksPlugin _Plugin = null!;
         public enum Toggle { On = 1, Off = 0 }
 
+        public static bool m_isTargetPortalInstalled;
+
         private static ConfigEntry<Toggle> _serverConfigLocked = null!;
         public static ConfigEntry<string> _chargeItem = null!;
         public static ConfigEntry<int> _chargeMax = null!;
         public static ConfigEntry<int> _chargeDecay = null!;
+        public static ConfigEntry<Toggle> _Decays = null!;
         public static ConfigEntry<int> _cost = null!;
         public static ConfigEntry<Toggle> _TeleportAnything = null!;
         public static ConfigEntry<Toggle> _UseKeys = null!;
@@ -48,7 +52,8 @@ namespace PortalTweaks
 
             _chargeItem = config("2 - Settings", "Charge Item", "GreydwarfEye", "Set charge item");
             _chargeMax = config("2 - Settings", "Charge Max", 10, "Set max charge");
-            _chargeDecay = config("2 - Settings", "Charge Decay", 5, "Set loss of charge time in minutes");
+            _Decays = config("2 - Settings", "Charge Decays", Toggle.On, "If on, portal charge decays over time");
+            _chargeDecay = config("2 - Settings", "Minute between decay", 5, "Set loss of charge time in minutes");
             _cost = config("2 - Settings", "Cost", 1, "Set charge cost to teleport");
             _TeleportAnything = config("2 - Settings", "Teleport Anything", Toggle.Off, "If on, player can teleport non-teleportable items");
             _UseKeys = config("2 - Settings", "Use Keys", Toggle.Off, "If on, portal checks if game has global key to allow teleportation of non-teleportable items");
@@ -62,10 +67,12 @@ namespace PortalTweaks
         public void Awake()
         {
             _Plugin = this;
-            
+            if (Chainloader.PluginInfos.ContainsKey("org.bepinex.plugins.targetportal"))
+            {
+                m_isTargetPortalInstalled = true;
+                PortalTweaksLogger.LogInfo("Target Portal Found");
+            }
             InitConfigs();
-
-
             Assembly assembly = Assembly.GetExecutingAssembly();
             _harmony.PatchAll(assembly);
             SetupWatcher();
