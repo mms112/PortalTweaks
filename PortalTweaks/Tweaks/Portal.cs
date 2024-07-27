@@ -123,16 +123,39 @@ public static class Portal
 
             if (item.m_shared.m_name != component.GetChargeItem()?.m_itemData.m_shared.m_name) return;
 
-            if (!component.AddCharge(1))
+            int stack = item.m_stack;
+            int max = PortalTweaksPlugin._chargeMax.Value - component.GetCurrentCharge();
+
+            if (stack > max)
             {
-                user.Message(MessageHud.MessageType.Center, FullyChargedMessage());
-                __result = true;
-                return;
+                if (!component.AddCharge(max)) return;
+                if (user.GetInventory().RemoveItem(item, max))
+                {
+                    __result = true;
+                    return;
+                }
             }
-            if (user.GetInventory().RemoveOneItem(item))
+            else
             {
-                __result = true;
+                if (!component.AddCharge(stack)) return;
+                if (user.GetInventory().RemoveItem(item))
+                {
+                    __result = true;
+                    return;
+                }
             }
+            user.Message(MessageHud.MessageType.Center, FullyChargedMessage());
+
+            // if (!component.AddCharge(1))
+            // {
+            //     user.Message(MessageHud.MessageType.Center, FullyChargedMessage());
+            //     __result = true;
+            //     return;
+            // }
+            // if (user.GetInventory().RemoveOneItem(item))
+            // {
+            //     __result = true;
+            // }
         }
     }
 
@@ -221,7 +244,8 @@ public static class Portal
             if (!PortalTweaksPlugin.m_isTargetPortalInstalled) return;
             if (!__instance) return;
             if (m_currentPortal == null) return;
-            m_currentPortal.RemoveCharge(PortalTweaksPlugin._cost.Value);
+            if (!__instance.NoCostCheat())
+                m_currentPortal.RemoveCharge(PortalTweaksPlugin._cost.Value);
             m_currentPortal = null;
             if (PortalTweaksPlugin._TeleportTames.Value is PortalTweaksPlugin.Toggle.Off) return;
             TeleportCharacters(GetTames(__instance), pos, rot);

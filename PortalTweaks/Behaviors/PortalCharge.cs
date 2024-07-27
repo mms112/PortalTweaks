@@ -118,7 +118,7 @@ public class PortalCharge : MonoBehaviour
         m_znv.GetZDO().Set(m_timerKey, (long)ZNet.instance.GetTimeSeconds());
     }
 
-    public bool CanTeleport() => GetCurrentCharge() - PortalTweaksPlugin._cost.Value >= 0;
+    public bool CanTeleport() => GetCurrentCharge() - PortalTweaksPlugin._cost.Value >= 0 || Player.m_localPlayer.NoCostCheat();
 
     public ItemDrop? GetChargeItem()
     {

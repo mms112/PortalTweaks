@@ -16,7 +16,7 @@ namespace PortalTweaks
     public class PortalTweaksPlugin : BaseUnityPlugin
     {
         internal const string ModName = "PortalTweaks";
-        internal const string ModVersion = "1.0.0";
+        internal const string ModVersion = "1.0.1";
         internal const string Author = "RustyMods";
         private const string ModGUID = Author + "." + ModName;
         private static readonly string ConfigFileName = ModGUID + ".cfg";
