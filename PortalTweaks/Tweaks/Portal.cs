@@ -298,7 +298,7 @@ public static class Portal
         foreach (var itemData in __instance.GetInventory().m_inventory)
         {
             if (itemData.m_shared.m_teleportable) continue;
-            if (!keyConfigs.TryGetValue(itemData.m_shared.m_name, out ConfigEntry<string> config)) continue;
+            if (!keyConfigs.TryGetValue(itemData.m_shared.m_name, out ConfigEntry<string> config)) return false;
             if (config.Value.IsNullOrWhiteSpace()) return false;
             if (ZoneSystem.instance.GetGlobalKey(config.Value)) continue;
             if (__instance.HaveUniqueKey(config.Value)) continue;
@@ -323,6 +323,7 @@ public static class Portal
     {
         foreach (Character? character in characters)
         {
+            if (character is Humanoid humanoid && !humanoid.GetInventory().IsTeleportable()) continue;
             Vector3 random = Random.insideUnitSphere * 10f;
             Vector3 location = position + new Vector3(random.x, 0f, random.z);
             TeleportTo(character, location, rotation);
