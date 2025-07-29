@@ -222,17 +222,27 @@ public static class Portal
     [HarmonyPatch(typeof(TeleportWorld), nameof(TeleportWorld.Teleport))]
     private static class TeleportWorld_Teleport_Patch
     {
+        public static bool teleported = false;
         private static bool Prefix(TeleportWorld __instance)
         {
+            teleported = false;
             if (!__instance.TryGetComponent(out PortalCharge component)) return true;
-            return component.CanTeleport();
+            if (!component.CanTeleport())
+            {
+                Player.m_localPlayer.Message(MessageHud.MessageType.Center, RequiredItemMessage(component));
+                return false;
+            }
+            return true;
         }
 
         private static void Postfix(TeleportWorld __instance, Player player)
         {
             if (!__instance.TryGetComponent(out PortalCharge component)) return;
-            component.RemoveCharge(PortalTweaksPlugin._cost.Value);
-            TeleportTames(__instance, player);
+            if (teleported)
+            {
+                component.RemoveCharge(PortalTweaksPlugin._cost.Value);
+                TeleportTames(__instance, player);
+            }
         }
     }
 
@@ -241,6 +251,7 @@ public static class Portal
     {
         private static void Postfix(Player __instance, Vector3 pos, Quaternion rot)
         {
+            TeleportWorld_Teleport_Patch.teleported = true;
             if (!PortalTweaksPlugin.m_isTargetPortalInstalled) return;
             if (!__instance) return;
             if (m_currentPortal == null) return;
