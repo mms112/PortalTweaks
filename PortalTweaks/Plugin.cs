@@ -36,13 +36,9 @@ namespace PortalTweaks
         public static ConfigEntry<int> _chargeDecay = null!;
         public static ConfigEntry<Toggle> _Decays = null!;
         public static ConfigEntry<int> _cost = null!;
-        public static ConfigEntry<Toggle> _TeleportAnything = null!;
-        public static ConfigEntry<Toggle> _UseKeys = null!;
+        // public static ConfigEntry<Toggle> _TeleportAnything = null!;
+        // public static ConfigEntry<Toggle> _UseKeys = null!;
         public static ConfigEntry<Toggle> _TeleportTames = null!;
-        public static ConfigEntry<string> _Required = null!;
-        public static ConfigEntry<string> _toCharge = null!;
-        public static ConfigEntry<string> _fullyCharged = null!;
-        public static ConfigEntry<string> _addCharge = null!;
 
         private void InitConfigs()
         {
@@ -55,14 +51,9 @@ namespace PortalTweaks
             _Decays = config("2 - Settings", "Charge Decays", Toggle.On, "If on, portal charge decays over time");
             _chargeDecay = config("2 - Settings", "Minute between decay", 5, "Set loss of charge time in minutes");
             _cost = config("2 - Settings", "Cost", 1, "Set charge cost to teleport");
-            _TeleportAnything = config("2 - Settings", "Teleport Anything", Toggle.Off, "If on, player can teleport non-teleportable items");
-            _UseKeys = config("2 - Settings", "Use Keys", Toggle.Off, "If on, portal checks if game has global key to allow teleportation of non-teleportable items");
+            // _TeleportAnything = config("2 - Settings", "Teleport Anything", Toggle.Off, "If on, player can teleport non-teleportable items");
+            // _UseKeys = config("2 - Settings", "Use Keys", Toggle.Off, "If on, portal checks if game has global key to allow teleportation of non-teleportable items");
             _TeleportTames = config("2 - Settings", "Teleport Tames", Toggle.Off, "If on, portal can teleport tames that are following player");
-            
-            _Required = config("Localization", "Required", "Required", "");
-            _toCharge = config("Localization", "to charge", "to charge", "");
-            _fullyCharged = config("Localization", "Portal is fully charged", "Portal is fully charged", "");
-            _addCharge = config("Localization", "Add charge", "Add charge", "");
         }
         public void Awake()
         {
@@ -80,7 +71,7 @@ namespace PortalTweaks
 
         private void OnDestroy()
         {
-            Config.Save();
+            //Config.Save(); Do not save the config, to keep the synced values
         }
 
         private void SetupWatcher()
@@ -130,14 +121,6 @@ namespace PortalTweaks
             bool synchronizedSetting = true)
         {
             return config(group, name, value, new ConfigDescription(description), synchronizedSetting);
-        }
-
-        private class ConfigurationManagerAttributes
-        {
-            [UsedImplicitly] public int? Order;
-            [UsedImplicitly] public bool? Browsable;
-            [UsedImplicitly] public string? Category;
-            [UsedImplicitly] public Action<ConfigEntryBase>? CustomDrawer;
         }
     }
 }

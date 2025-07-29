@@ -27,7 +27,7 @@ public static class Portal
                 {
                     prefab.AddComponent<PortalCharge>();
 
-                    if (prefab.TryGetComponent(out WearNTear wearNTear))
+                    /* if (prefab.TryGetComponent(out WearNTear wearNTear))
                     {
                         ConfigEntry<float> health = PortalTweaksPlugin._Plugin.config(prefab.name, "Health", wearNTear.m_health, "Set health");
                         wearNTear.m_health = health.Value;
@@ -101,15 +101,15 @@ public static class Portal
                                 piece.m_category = category.Value;
                             }
                         };
-                    }
+                    } */
                 }
 
-                if (prefab.TryGetComponent(out ItemDrop component))
+                /*if (prefab.TryGetComponent(out ItemDrop component))
                 {
                     if (component.m_itemData.m_shared.m_teleportable) continue;
                     ConfigEntry<string> config = PortalTweaksPlugin._Plugin.config("Keys", prefab.name, "", "Set defeat key to allow teleportation");
                     keyConfigs[component.m_itemData.m_shared.m_name] = config;
-                }
+                } */
             }
         }
     }
@@ -185,7 +185,7 @@ public static class Portal
             stringBuilder.Append($"{component.GetChargeItem()?.m_itemData.m_shared.m_name}: ");
             stringBuilder.Append($"{component.GetCurrentCharge()} / {PortalTweaksPlugin._chargeMax.Value}\n");
             if (!PortalTweaksPlugin.m_isTargetPortalInstalled) 
-                stringBuilder.Append($"[<color=yellow><b>L.Shift</b></color> + <color=yellow><b>$KEY_Use</b></color>] {PortalTweaksPlugin._addCharge.Value}");
+                stringBuilder.Append($"[<color=yellow><b>L.Shift</b></color> + <color=yellow><b>$KEY_Use</b></color>] {Localization.instance.Localize("$portal_add_charge")}");
             __result = Localization.instance.Localize(stringBuilder.ToString());
         }
     }
@@ -211,7 +211,7 @@ public static class Portal
             if (component.AddCharge(1))
             {
                 if (!human.GetInventory().RemoveOneItem(item)) return false;
-                human.DoInteractAnimation(__instance.transform.position);
+                human.DoInteractAnimation(__instance.gameObject);
                 return false;
             }
             human.Message(MessageHud.MessageType.Center, FullyChargedMessage());
@@ -272,7 +272,7 @@ public static class Portal
         }
     }
 
-    [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.IsTeleportable))]
+    /* [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.IsTeleportable))]
     private static class Humanoid_IsTeleportable_Patch
     {
         private static void Postfix(Humanoid __instance, ref bool __result)
@@ -287,13 +287,13 @@ public static class Portal
             if (PortalTweaksPlugin._UseKeys.Value is PortalTweaksPlugin.Toggle.Off) return;
             __result = CanTeleport(__instance);
         }
-    }
+    } */
 
-    private static string RequiredItemMessage(PortalCharge component) => $"{PortalTweaksPlugin._Required.Value} {component.GetChargeItem()?.m_itemData.m_shared.m_name} {PortalTweaksPlugin._toCharge.Value}";
+    private static string RequiredItemMessage(PortalCharge component) => string.Format(Localization.instance.Localize("$portal_req_charge"), (PortalTweaksPlugin._cost.Value > 1 ? PortalTweaksPlugin._cost.Value.ToString() + " " : "") + Localization.instance.Localize(component.GetChargeItem()?.m_itemData.m_shared.m_name));
 
-    private static string FullyChargedMessage() => $"{PortalTweaksPlugin._fullyCharged.Value}";
+    private static string FullyChargedMessage() => Localization.instance.Localize("$portal_fully_charged");
 
-    private static bool CanTeleport(Humanoid __instance)
+    /* private static bool CanTeleport(Humanoid __instance)
     {
         foreach (var itemData in __instance.GetInventory().m_inventory)
         {
@@ -306,7 +306,7 @@ public static class Portal
         }
 
         return true;
-    }
+    } */
 
     private static void TeleportTames(TeleportWorld __instance, Player player)
     {
