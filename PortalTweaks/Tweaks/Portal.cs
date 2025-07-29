@@ -25,7 +25,8 @@ public static class Portal
             {
                 if (prefab.GetComponent<TeleportWorld>())
                 {
-                    prefab.AddComponent<PortalCharge>();
+                    if (prefab.GetComponent<PortalCharge>() == null)
+                        prefab.AddComponent<PortalCharge>();
 
                     /* if (prefab.TryGetComponent(out WearNTear wearNTear))
                     {
@@ -223,6 +224,7 @@ public static class Portal
     private static class TeleportWorld_Teleport_Patch
     {
         public static bool teleported = false;
+
         private static bool Prefix(TeleportWorld __instance)
         {
             teleported = false;
@@ -231,6 +233,15 @@ public static class Portal
             {
                 Player.m_localPlayer.Message(MessageHud.MessageType.Center, RequiredItemMessage(component));
                 return false;
+            }
+
+            if (__instance.TargetFound() && ZoneSystem.instance.GetGlobalKey(GlobalKeys.NoBossPortals))
+            {
+                if (Player.m_localPlayer.m_nview.GetZDO().GetBool("EventFlag".GetStableHashCode()))
+                {
+                    Player.m_localPlayer.Message(MessageHud.MessageType.Center, "$msg_blockedbyboss");
+                    return false;
+                }
             }
             return true;
         }
