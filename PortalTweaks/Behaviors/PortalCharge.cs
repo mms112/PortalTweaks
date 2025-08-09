@@ -67,8 +67,8 @@ public class PortalCharge : MonoBehaviour
 
     public int GetCurrentCharge()
     {
-        if (m_znv == null) return 0;
-        return !m_znv.IsValid() ? 0 : m_znv.GetZDO().GetInt(m_key);
+        if (m_znv == null) return PortalTweaksPlugin._cost.Value;
+        return !m_znv.IsValid() ? PortalTweaksPlugin._cost.Value : m_znv.GetZDO().GetInt(m_key);
     }
 
     private void RPC_AddCharge(long sender, int amount)
