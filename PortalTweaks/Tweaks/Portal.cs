@@ -385,7 +385,7 @@ public static class Portal
         pos.y = ZoneSystem.instance.GetSolidHeight(pos) + 0.5f;
         transform.position = pos;
         transform.rotation = rot;
-        character.m_body.velocity = Vector3.zero;
+        character.m_body.linearVelocity = Vector3.zero;
     }
 
     [HarmonyPatch(typeof(TeleportWorldTrigger), nameof(TeleportWorldTrigger.OnTriggerEnter))]
