@@ -186,7 +186,7 @@ public static class Portal
             stringBuilder.Append($"{component.GetChargeItem()?.m_itemData.m_shared.m_name}: ");
             stringBuilder.Append($"{component.GetCurrentCharge()} / {PortalTweaksPlugin._chargeMax.Value}\n");
             if (!PortalTweaksPlugin.m_isTargetPortalInstalled) 
-                stringBuilder.Append($"[<color=yellow><b>L.Shift</b></color> + <color=yellow><b>$KEY_Use</b></color>] {Localization.instance.Localize("$portal_add_charge")}");
+                stringBuilder.Append($"[<color=yellow><b>Shift</b></color> + <color=yellow><b>$KEY_Use</b></color>] {Localization.instance.Localize("$portal_add_charge")}");
             __result = Localization.instance.Localize(stringBuilder.ToString());
         }
     }
