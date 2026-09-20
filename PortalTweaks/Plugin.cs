@@ -48,7 +48,7 @@ namespace PortalTweaks
 
             _chargeItem = config("2 - Settings", "Charge Item", "GreydwarfEye", "Set charge item");
             _chargeMax = config("2 - Settings", "Charge Max", 10, "Set max charge");
-            _Decays = config("2 - Settings", "Charge Decays", Toggle.On, "If on, portal charge decays over time");
+            _Decays = config("2 - Settings", "Charge Decays", Toggle.Off, "If on, portal charge decays over time");
             _chargeDecay = config("2 - Settings", "Minute between decay", 5, "Set loss of charge time in minutes");
             _cost = config("2 - Settings", "Cost", 1, "Set charge cost to teleport");
             // _TeleportAnything = config("2 - Settings", "Teleport Anything", Toggle.Off, "If on, player can teleport non-teleportable items");

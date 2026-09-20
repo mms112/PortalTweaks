@@ -311,7 +311,7 @@ public static class Portal
         }
     } */
 
-    private static string RequiredItemMessage(PortalCharge component) => string.Format(Localization.instance.Localize("$portal_req_charge"), (PortalTweaksPlugin._cost.Value > 1 ? PortalTweaksPlugin._cost.Value.ToString() + " " : "") + Localization.instance.Localize(component.GetChargeItem()?.m_itemData.m_shared.m_name));
+    private static string RequiredItemMessage(PortalCharge component) => string.Format(Localization.instance.Localize("$portal_req_charge"), (PortalTweaksPlugin._cost.Value > 1 ? PortalTweaksPlugin._cost.Value.ToString() + "x " : "") + Localization.instance.Localize(component.GetChargeItem()?.m_itemData.m_shared.m_name));
 
     private static string FullyChargedMessage() => Localization.instance.Localize("$portal_fully_charged");
 
@@ -345,7 +345,7 @@ public static class Portal
     {
         foreach (Character? character in characters)
         {
-            if (character is Humanoid humanoid && !humanoid.GetInventory().IsTeleportable()) continue;
+            if (character is Humanoid humanoid && !humanoid.GetInventory().IsTeleportable(false)) continue;
             Vector3 random = Random.insideUnitSphere * 10f;
             Vector3 location = position + new Vector3(random.x, 0f, random.z);
             TeleportTo(character, location, rotation);
